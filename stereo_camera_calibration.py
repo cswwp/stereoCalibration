@@ -19,13 +19,15 @@ def stereo_calibrate(left_file, right_file, left_dir, left_prefix, right_dir, ri
     K2, D2 = load_coefficients(right_file)
 
     flags = 0
-    # flags |= cv2.CALIB_FIX_INTRINSIC
-    flags |= cv2.CALIB_USE_INTRINSIC_GUESS
-    flags |= cv2.CALIB_SAME_FOCAL_LENGTH
+    flags |= cv2.CALIB_FIX_INTRINSIC
+    #flags |= cv2.CALIB_USE_INTRINSIC_GUESS
+    flags |= cv2.CALIB_FIX_ASPECT_RATIO
+    #flags |= cv2.CALIB_SAME_FOCAL_LENGTH
+    #flags |= cv2.CALIB_SAME_FOCAL_LENGTH
 
     ret, K1, D1, K2, D2, R, T, E, F = cv2.stereoCalibrate(objp, leftp, rightp, K1, D1, K2, D2, image_size, flags=flags)
     print("Stereo calibration rms: ", ret)
-    R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(K1, D1, K2, D2, image_size, R, T, flags=cv2.CALIB_ZERO_DISPARITY)
+    R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(K1, D1, K2, D2, image_size, R, T, flags=cv2.CALIB_ZERO_DISPARITY, alpha=0.6)
 
     save_stereo_coefficients(save_file, K1, D1, K2, D2, R, T, E, F, R1, R2, P1, P2, Q)
 
@@ -88,11 +90,11 @@ def load_image_points(left_dir, left_prefix, right_dir, right_prefix, image_form
                                                            cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_FILTER_QUADS)
 
         if ret_left and ret_right:  # If both image is okay. Otherwise we explain which pair has a problem and continue
-            print('OK')
+            #print('OK')
             show_right = cv2.drawChessboardCorners(right, (width, height), corners_right, ret_right)
             show_left = cv2.drawChessboardCorners(left, (width, height), corners_left, ret_left)
             cv2.imshow('stereo', np.hstack((show_left, show_right)))
-            cv2.waitKey(0)
+            cv2.waitKey(100)
             # Object points
             objpoints.append(objp)
             # Right points

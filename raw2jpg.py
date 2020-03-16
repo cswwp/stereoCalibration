@@ -131,17 +131,28 @@ def trans_sample(indir, outdir):
 
 
 
+def params():
+    import argparse
+    parser = argparse.ArgumentParser(description='RAW2JPG')
+    parser.add_argument('--source_dir', type=str, required=True)
+    parser.add_argument('--outdir', type=str, required=True)
+    parser.add_argument('--format', type=str, default='.jpg')
+    parser.add_argument('--mode', type=str, default='cb', choices=['cb', 'sample'])
 
+    args = parser.parse_args()
 
-
+    return args
 
 
 if __name__ == "__main__":
+    args = params()
     # #merge_binocular_data("./raw", "./merged")
-    save_mono_cheese('raw', 'sample', 1)
-    save_mono_cheese('raw', 'sample', 0)
+    if args.mode == 'cb':
+        save_mono_cheese(args.source_dir, args.outdir, 1)
+        save_mono_cheese(args.source_dir, args.outdir, 0)
+    else:
 
-    # trans_sample('raw_test_sample', 'test_sample940_1')
+        trans_sample(args.source_dir, args.outdir)
 
 
 

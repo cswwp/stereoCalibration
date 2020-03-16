@@ -12,11 +12,11 @@ def depth_map(imgL, imgR):
 
     left_matcher = cv2.StereoSGBM_create(
         minDisparity=0,
-        numDisparities=32,  # max_disp has to be dividable by 16 f. E. HH 192, 256
+        numDisparities=48,  # max_disp has to be dividable by 16 f. E. HH 192, 256
         blockSize=window_size,
-        P1=8 * 3 * window_size ** 2,
+        P1=8 * 1 * window_size ** 2,
         # wsize default 3; 5; 7 for SGBM reduced size image; 15 for SGBM full size image (1300px and above); 5 Works nicely
-        P2=32 * 3 * window_size ** 2,
+        P2=32 * 1 * window_size ** 2,
         disp12MaxDiff=1,
         uniquenessRatio=15,
         speckleWindowSize=0,
@@ -38,16 +38,16 @@ def depth_map(imgL, imgR):
     dispr = right_matcher.compute(imgR, imgL)  # .astype(np.float32)/16
     displ = np.int16(displ)
     dispr = np.int16(dispr)
+    #displ_ori_show = np.int8(displ)
+    #cv2.imshow('odis',displ_ori_show )
 
-    cv2.imshow('odis', np.int8(displ))
-
-    # disp_temp = cv2.normalize(displ, displ, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    # cv2.imshow('displ', disp_temp)
+    disp_temp = cv2.normalize(displ, displ, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    cv2.imshow('displ', disp_temp)
 
 
     filteredImg = wls_filter.filter(displ, imgL, None, dispr)  # important to put "imgL" here!!!
 
-    filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX);
+    filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX)
     filteredImg = np.uint8(filteredImg)
 
     return filteredImg
@@ -60,6 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_dir', type=str, required=True)
     parser.add_argument('--im_h', type=int, default=1280)
     parser.add_argument('--im_w', type=int, default=720)
+    parser.add_argument('--format', type=str, default='.jpg')
 
     args = parser.parse_args()
 
@@ -100,7 +101,11 @@ if __name__ == '__main__':
     left_lst = sorted(left_lst)
     right_lst = sorted(right_lst)
 
+
     for index_local in range(len(left_lst)):
+        if not left_lst[index_local].endswith(args.format):
+            continue
+
         print('left:', os.path.join(left_src_dir, left_lst[index_local]))
         leftFrame = cv2.imread(os.path.join(left_src_dir, left_lst[index_local]), 0)
         leftFrame = cv2.resize(leftFrame, (width, height))
@@ -113,9 +118,9 @@ if __name__ == '__main__':
         # Undistortion and Rectification part!
         leftMapX, leftMapY = cv2.initUndistortRectifyMap(K1, D1, R1, P1, (width, height), cv2.CV_32FC1)
 
-        left_rectified = cv2.remap(leftFrame, leftMapX, leftMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
+        left_rectified = cv2.remap(leftFrame, leftMapX, leftMapY, cv2.INTER_NEAREST, borderMode=cv2.BORDER_REPLICATE)
         rightMapX, rightMapY = cv2.initUndistortRectifyMap(K2, D2, R2, P2, (width, height), cv2.CV_32FC1)
-        right_rectified = cv2.remap(rightFrame, rightMapX, rightMapY, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
+        right_rectified = cv2.remap(rightFrame, rightMapX, rightMapY, cv2.INTER_NEAREST, borderMode=cv2.BORDER_REPLICATE)
 
 
         merge = np.hstack((left_rectified, right_rectified))

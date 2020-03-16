@@ -49,7 +49,7 @@ def calibrate(dirpath, prefix, image_format, square_size, width=9, height=6):
         #print(ret, corners)
         # If found, add object points, image points (after refining them)
         if ret:
-            print('ok')
+            #print('ok')
             objpoints.append(objp)
 
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
